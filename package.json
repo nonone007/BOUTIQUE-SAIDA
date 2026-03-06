@@ -1,0 +1,16 @@
+{
+  "name": "product-display",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "deploy": "npm run build && firebase deploy"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.525.0",
+    "@aws-sdk/s3-request-presigner": "^3.525.0"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0",
+    "javascript-obfuscator": "^4.1.1"
+  }
+}
