@@ -160,6 +160,22 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // =====================================================
+  // ENDPOINT DE DIAGNOSTIC (à supprimer après résolution)
+  // =====================================================
+  if (url.pathname === '/debug-env' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      R2_ACCESS_KEY_ID: !!process.env.R2_ACCESS_KEY_ID,
+      R2_SECRET_ACCESS_KEY: !!process.env.R2_SECRET_ACCESS_KEY,
+      R2_ENDPOINT: !!process.env.R2_ENDPOINT,
+      R2_BUCKET_NAME: !!process.env.R2_BUCKET_NAME,
+      R2_PUBLIC_URL: !!process.env.R2_PUBLIC_URL,
+      NODE_ENV: process.env.NODE_ENV
+    }));
+    return;
+  }
+
   // Presign endpoint for R2
   if (url.pathname === '/presign' && req.method === 'POST') {
     console.log('🔗 Presign request received');
