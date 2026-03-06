@@ -7,17 +7,38 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const PORT = process.env.PORT || 3000;
 const BASE_DIR = __dirname;
 
-// Cloudflare R2 Configuration
-const r2Client = new S3Client({
-  region: 'auto',
-  endpoint: process.env.R2_ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-  },
-});
+// Cloudflare R2 Configuration - with validation
+const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
+const R2_ENDPOINT = process.env.R2_ENDPOINT;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL; // Optional, e.g., https://pub-xxx.r2.dev
+
+// Vérification des credentials
+console.log('🔑 R2 Config Check:');
+console.log('R2_ACCESS_KEY_ID present:', !!R2_ACCESS_KEY_ID);
+console.log('R2_SECRET_ACCESS_KEY present:', !!R2_SECRET_ACCESS_KEY);
+console.log('R2_ENDPOINT present:', !!R2_ENDPOINT);
+console.log('R2_BUCKET_NAME present:', !!R2_BUCKET_NAME);
+
+let r2Client = null;
+if (R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_ENDPOINT && R2_BUCKET_NAME) {
+  try {
+    r2Client = new S3Client({
+      region: 'auto',
+      endpoint: R2_ENDPOINT,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    });
+    console.log('✅ R2 client initialized successfully');
+  } catch (err) {
+    console.error('❌ Failed to initialize R2 client:', err);
+  }
+} else {
+  console.error('❌ R2 credentials missing, /presign endpoint will return 503');
+}
 
 // Ensure image directories exist
 function ensureDirectories() {
@@ -143,6 +164,12 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/presign' && req.method === 'POST') {
     console.log('🔗 Presign request received');
     try {
+      if (!r2Client) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'R2 not configured on server' }));
+        return;
+      }
+
       const body = await parseJSONBody(req);
       const { filename, contentType, folder } = body;
 
@@ -185,7 +212,10 @@ const server = http.createServer(async (req, res) => {
       }));
 
     } catch (err) {
-      console.error('❌ Presign error:', err);
+      console.error('❌ Presign error details:');
+      console.error('Name:', err.name);
+      console.error('Message:', err.message);
+      console.error('Stack:', err.stack);
       res.writeHead(500, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: false, error: err.message || 'Presign failed' }));
     }
