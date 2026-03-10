@@ -1896,6 +1896,10 @@ async function uploadVideoToServer(file, folder, originalFilename) {
 async function uploadToR2(file, folder) {
   const logPrefix = '[uploadToR2]';
   try {
+    // Skip R2 when running from file:// (no server reachable)
+    if (window.location.protocol === 'file:') {
+      throw new Error('R2 non disponible en mode file:// — utilise Firebase/IndexedDB à la place');
+    }
     console.log(`${logPrefix} 🔗 Demande d'URL présignée pour ${file.name} dans ${folder}`);
     const response = await fetch('/presign', {
       method: 'POST',
@@ -10553,16 +10557,9 @@ if (document.readyState === 'loading') {
     });
   }
 
-  // ... le reste du code existant ...
-
-  // Exposer les fonctions pour qu'elles soient accessibles globalement
-   // Exposer les fonctions pour qu'elles soient accessibles globalement
-  window.uploadToR2 = uploadToR2;
-  window.backendUploadImage = backendUploadImage;
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-})(); // fin de la IIFE
+})();
