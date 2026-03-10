@@ -6626,38 +6626,6 @@ function getImageSrc(imgPath) {
   return imgPath;
 }
 
-  // Legacy: old folder-organized keys
-  if (imgPath.startsWith('images_today_') || imgPath.startsWith('images_discount_') || imgPath.startsWith('images_stories_')) {
-    const dataUrl = localStorage.getItem(imgPath);
-    if (!dataUrl) {
-      console.warn('[getImageSrc] localStorage key not found:', imgPath);
-    }
-    return dataUrl || '';
-  }
-
-  // Legacy: IndexedDB paths
-  if (imgPath.startsWith('idb:')) {
-    const imageId = imgPath.replace('idb:', '');
-    // Return placeholder - the actual loading will happen in the card rendering
-    return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // 1x1 transparent pixel
-  }
-
-  // Legacy: server paths (for backward compatibility)
-  if (imgPath.startsWith('images/')) {
-    console.log('[getImageSrc] Server path:', imgPath);
-    return imgPath;
-  }
-
-  // If it's a Cloudinary URL (starts with http:// or https://), optimize it
-  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-    // Use Cloudinary optimization helper for better performance
-    return getOptimizedImageUrl(imgPath, { width: 800, height: 800, quality: 'auto' });
-  }
-
-  // Otherwise return as-is (external URL or unknown format)
-  return imgPath;
-}
-
 // Cloudinary image optimization helper (from solu.txt)
 // Automatically optimizes Cloudinary images for better performance
 function getOptimizedImageUrl(cloudinaryUrl, options = {}) {
