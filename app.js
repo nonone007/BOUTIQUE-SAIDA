@@ -1938,7 +1938,6 @@ async function uploadToR2(file, folder) {
     throw error;
   }
 }
-
 /**
  * Firebase Storage: Upload Product Image
  * 
@@ -2233,8 +2232,41 @@ async function uploadProductVideoToFirebase(file, status = 'today') {
  * @returns {Promise<{success: boolean, imageUrl: string, metadata?: object}>}
  */
 async function backendUploadImage(file, status) {
-  // Use Firebase Storage for product images
-  return await uploadProductImageToFirebase(file, status);
+  const logPrefix = '[backendUploadImage]';
+  console.log(`${logPrefix} Début upload pour ${file.name}, status=${status}`);
+
+  // 1. Essayer R2
+  if (typeof uploadToR2 === 'function') {
+    try {
+      const result = await uploadToR2(file, status);
+      if (result.success && result.publicUrl) {
+        console.log(`${logPrefix} ✅ Upload réussi vers R2: ${result.publicUrl}`);
+        return {
+          success: true,
+          imageUrl: result.publicUrl,
+          metadata: {
+            originalSize: file.size,
+            status: status,
+            storageType: 'r2',
+            path: result.key
+          }
+        };
+      }
+    } catch (err) {
+      console.warn(`${logPrefix} Échec R2, fallback Firebase`, err);
+    }
+  }
+
+  // 2. Fallback Firebase
+  try {
+    const fbResult = await uploadProductImageToFirebase(file, status);
+    return fbResult;
+  } catch (fbErr) {
+    console.warn(`${logPrefix} Échec Firebase, fallback localStorage`, fbErr);
+  }
+
+  // 3. Fallback localStorage/IndexedDB
+  return await uploadImageToLocalStorage(file, status);
 }
 
 /**
@@ -6574,11 +6606,25 @@ function renderTitleEmoji(title, gender) {
  */
 function getImageSrc(imgPath) {
   if (!imgPath) return '';
-
-  // If it's already a data URL or HTTP/HTTPS URL (including Firebase), return as-is
-  if (imgPath.startsWith('data:') || imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+  // Si c'est une URL absolue (http ou https), on la retourne telle quelle
+  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
     return imgPath;
   }
+  // Si c'est une clé R2 (ex: today/123.jpg) et que R2_PUBLIC_URL est défini, on construit l'URL
+  if (typeof window.R2_PUBLIC_URL !== 'undefined' && window.R2_PUBLIC_URL) {
+    return window.R2_PUBLIC_URL + '/' + imgPath;
+  }
+  // Gestion des anciens stockages locaux
+  if (imgPath.startsWith('img_') || imgPath.startsWith('images_')) {
+    const dataUrl = localStorage.getItem(imgPath);
+    if (dataUrl) return dataUrl;
+  }
+  if (imgPath.startsWith('idb:')) {
+    // Placeholder pour IndexedDB, le chargement se fait via loadIndexedDBImage
+    return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+  }
+  return imgPath;
+}
 
   // Legacy: localStorage keys (kept for backward compatibility with old data)
   if (imgPath.startsWith('img_')) {
