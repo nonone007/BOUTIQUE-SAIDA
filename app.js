@@ -3751,16 +3751,19 @@ function createQuickProductForm(item, isNewProduct = false) {
       // Use backend adapter to save article
       await backendSaveArticle(item, isNewProduct);
       render();
-      document.body.removeChild(modal);
+      if (modal && modal.parentNode === document.body) {
+        document.body.removeChild(modal);
+      }
     });
 
     form.querySelector('.cancel').addEventListener('click', () => {
-      document.body.removeChild(modal);
+      if (modal && modal.parentNode === document.body) {
+        document.body.removeChild(modal);
+      }
     });
 
-    // Close modal when clicking outside (on the backdrop) - like pressing Escape
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
+      if (e.target === modal && modal.parentNode === document.body) {
         document.body.removeChild(modal);
       }
     });
@@ -6610,13 +6613,24 @@ function renderTitleEmoji(title, gender) {
  */
 function getImageSrc(imgPath) {
   if (!imgPath) return '';
-  // Si c'est une URL absolue (http ou https), on la retourne telle quelle
-  if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-    return imgPath;
+  const trimmed = String(imgPath).trim();
+
+  // Fix double-URL bug: detect if a full URL is embedded inside a path
+  const urlMatch = trimmed.match(/(https?:\/\/[^\s"']+)/);
+  if (urlMatch) {
+    const fullUrl = urlMatch[1];
+    if (fullUrl.includes('cloudinary')) {
+      return getOptimizedImageUrl(fullUrl, { width: 800, height: 800, quality: 'auto' });
+    }
+    return fullUrl;
   }
+
   // Si c'est une clé R2 (ex: today/123.jpg) et que R2_PUBLIC_URL est défini, on construit l'URL
   if (typeof window.R2_PUBLIC_URL !== 'undefined' && window.R2_PUBLIC_URL) {
-    return window.R2_PUBLIC_URL + '/' + imgPath;
+    // Avoid double slash if public URL ends with slash or path starts with slash
+    const base = window.R2_PUBLIC_URL.replace(/\/$/, '');
+    const path = trimmed.replace(/^\//, '');
+    return `${base}/${path}`;
   }
   // Gestion des anciens stockages locaux
   if (imgPath.startsWith('img_') || imgPath.startsWith('images_')) {
