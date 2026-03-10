@@ -1896,7 +1896,7 @@ async function uploadVideoToServer(file, folder, originalFilename) {
 async function uploadToR2(file, folder) {
   const logPrefix = '[uploadToR2]';
   try {
-    console.log(`${logPrefix} 🔗 Requesting presigned URL for ${file.name} in ${folder}`);
+    console.log(`${logPrefix} 🔗 Demande d'URL présignée pour ${file.name} dans ${folder}`);
     const response = await fetch('/presign', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1909,12 +1909,12 @@ async function uploadToR2(file, folder) {
 
     if (!response.ok) {
       const errData = await response.json();
-      throw new Error(errData.error || 'Failed to get presigned URL');
+      throw new Error(errData.error || 'Échec de la génération de l’URL présignée');
     }
 
-    const { uploadUrl, key, publicUrl: r2PublicUrl } = await response.json();
+    const { uploadUrl, key, publicUrl } = await response.json();
 
-    console.log(`${logPrefix} 📤 Uploading to R2: ${key}`);
+    console.log(`${logPrefix} 📤 Upload vers R2 : ${key}`);
     const uploadResponse = await fetch(uploadUrl, {
       method: 'PUT',
       body: file,
@@ -1922,20 +1922,19 @@ async function uploadToR2(file, folder) {
     });
 
     if (!uploadResponse.ok) {
-      throw new Error(`Upload to R2 failed: ${uploadResponse.statusText}`);
+      throw new Error(`Upload échoué : ${uploadResponse.statusText}`);
     }
 
-    console.log(`${logPrefix} ✅ Upload successful: ${key}`);
+    console.log(`${logPrefix} ✅ Upload réussi : ${key}`);
 
-    // Use the r2PublicUrl from server if provided, otherwise fallback to a generic way 
-    // (usually the user defines R2_PUBLIC_URL on Render)
+    // Retourne l'URL publique si fournie, sinon la clé
     return {
       success: true,
-      publicUrl: r2PublicUrl || `https://${folder}.${file.name}`, // Fallback if no public URL configured
+      publicUrl: publicUrl || key,  // Utilise la clé comme fallback
       key: key
     };
   } catch (error) {
-    console.error(`${logPrefix} ❌ R2 upload failed:`, error);
+    console.error(`${logPrefix} ❌ Échec :`, error);
     throw error;
   }
 }
@@ -10548,6 +10547,12 @@ if (document.readyState === 'loading') {
       resizeTimer = setTimeout(adjustTitleSizes, 250);
     });
   }
+
+  // ... le reste du code existant ...
+
+  // Exposer les fonctions pour qu'elles soient accessibles globalement
+  window.uploadToR2 = uploadToR2;
+  window.backendUploadImage = backendUploadImage;
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
