@@ -4207,7 +4207,9 @@ function createQuickActionsMenu(item, x, y, anchorEl) {
     button.onmouseout = () => button.style.background = '#ffffff12';
     button.onclick = () => {
       action();
-      document.body.removeChild(menu);
+      if (menu && menu.parentNode === document.body) {
+        document.body.removeChild(menu);
+      }
     };
     menu.appendChild(button);
   });
@@ -4348,7 +4350,9 @@ function createProductEditor(item) {
   const saleFields = form.querySelector('#sale-fields');
 
   const cleanup = () => {
-    document.body.removeChild(modal);
+    if (modal && modal.parentNode === document.body) {
+      document.body.removeChild(modal);
+    }
     statusSelect.removeEventListener('change', handleStatusChange);
     form.removeEventListener('submit', handleSubmit);
   };
@@ -4388,7 +4392,9 @@ function createProductEditor(item) {
   form.addEventListener('submit', handleSubmit);
 
   form.querySelector('.cancel').addEventListener('click', () => {
-    document.body.removeChild(modal);
+    if (modal && modal.parentNode === document.body) {
+      document.body.removeChild(modal);
+    }
   });
 
   modal.appendChild(form);
