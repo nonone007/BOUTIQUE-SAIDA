@@ -6626,15 +6626,6 @@ function getImageSrc(imgPath) {
   return imgPath;
 }
 
-  // Legacy: localStorage keys (kept for backward compatibility with old data)
-  if (imgPath.startsWith('img_')) {
-    const dataUrl = localStorage.getItem(imgPath);
-    if (!dataUrl) {
-      console.warn('[getImageSrc] localStorage key not found:', imgPath);
-    }
-    return dataUrl || '';
-  }
-
   // Legacy: old folder-organized keys
   if (imgPath.startsWith('images_today_') || imgPath.startsWith('images_discount_') || imgPath.startsWith('images_stories_')) {
     const dataUrl = localStorage.getItem(imgPath);
@@ -10597,6 +10588,7 @@ if (document.readyState === 'loading') {
   // ... le reste du code existant ...
 
   // Exposer les fonctions pour qu'elles soient accessibles globalement
+   // Exposer les fonctions pour qu'elles soient accessibles globalement
   window.uploadToR2 = uploadToR2;
   window.backendUploadImage = backendUploadImage;
 
@@ -10605,4 +10597,4 @@ if (document.readyState === 'loading') {
   } else {
     init();
   }
-})();
+})(); // fin de la IIFE
