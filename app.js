@@ -196,6 +196,22 @@ if (READ_ONLY_MODE) {
   console.log('📖 Read-only mode enabled - editing disabled, real-time updates enabled');
 }
 
+/** Fetch server configuration and environment variables on startup */
+async function fetchServerConfig() {
+  const logPrefix = '[ServerConfig]';
+  try {
+    const response = await fetch('/debug-env');
+    if (!response.ok) return;
+    const config = await response.json();
+    if (config.R2_PUBLIC_URL) {
+      window.R2_PUBLIC_URL = config.R2_PUBLIC_URL;
+      console.log(`${logPrefix} ✅ Configured R2_PUBLIC_URL: ${window.R2_PUBLIC_URL}`);
+    }
+  } catch (err) {
+    console.warn(`${logPrefix} ⚠️ Could not fetch server config (normal in file:// mode):`, err.message);
+  }
+}
+
 /** Generate a unique ID for an article (products and stories). Used to avoid bugs when two items have the same name. */
 function generateArticleId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -2469,6 +2485,9 @@ window.unhideAllArticles = unhideAllArticles;
 // Expose helpers used by inline handlers
 window.escapeAttr = escapeAttr;
 window.getImageSrc = getImageSrc;
+window.uploadToR2 = uploadToR2;
+window.backendUploadImage = backendUploadImage;
+window.backendUploadProductVideo = backendUploadProductVideo;
 window.moveItemToTop = moveItemToTop;
 window.moveItemUp = moveItemUp;
 window.moveItemDown = moveItemDown;
@@ -7521,6 +7540,7 @@ function disableEditFunctions() {
 }
 
 async function init() {
+  await fetchServerConfig();
   await loadCatalog();
   await loadVideos();
 
