@@ -1,18 +1,19 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" data-read-only="true">
+<html lang="ar" dir="rtl">
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Product Display</title>
   <meta name="description" content="Daily product showcase: New items, Sales, and Stories." />
+  <!-- Edit the message below to customize the mobile welcome alert -->
+  <meta name="mobile-welcome-message" content="مرحباً بك! استمتع بتصفح منتجاتنا على الهاتف." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Cormorant+Garamond:wght@600&display=swap"
     rel="stylesheet">
   <style>
-    /* Admin controls removed completely in read-only mode (index.html) */
     :root {
       --bg: #f8fafc;
       --card: #ffffff;
@@ -52,6 +53,69 @@
       color: #ffffff;
     }
 
+    /* Mobile welcome alert */
+    .mobile-welcome-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9999;
+    }
+
+    .mobile-welcome-overlay.is-visible {
+      display: flex;
+    }
+
+    .mobile-welcome-box {
+      width: min(420px, 92vw);
+      background: var(--card);
+      color: var(--text);
+      border-radius: 18px;
+      padding: 24px 20px 18px;
+      position: relative;
+      box-shadow: 0 24px 60px -30px rgba(15, 23, 42, 0.6);
+    }
+
+    .mobile-welcome-text {
+      margin: 0 0 16px;
+      font-size: 1rem;
+      line-height: 1.7;
+      /* Respecter les retours à la ligne du textarea (\\n) */
+      white-space: pre-line;
+    }
+
+    .mobile-welcome-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .mobile-welcome-checkbox input {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .mobile-welcome-close {
+      position: absolute;
+      top: 10px;
+      inset-inline-end: 10px;
+      border: none;
+      background: rgba(2, 6, 23, 0.06);
+      color: var(--muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
     * {
       box-sizing: border-box
     }
@@ -69,30 +133,6 @@
       line-height: 1.6;
     }
 
-    body.modal-open {
-      overflow: hidden;
-      overflow-x: hidden;
-    }
-
-    html.modal-open {
-      overflow: hidden;
-      overflow-x: hidden;
-    }
-
-    @media (min-width: 769px) {
-      body.modal-open {
-        position: fixed;
-        width: 100%;
-      }
-    }
-
-    button,
-    .btn,
-    .map-cta,
-    .lightbox-close {
-      touch-action: manipulation;
-    }
-
     a {
       color: inherit;
       text-decoration: none
@@ -102,270 +142,6 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px 20px;
-    }
-
-    /* ╔══════════════════════════════════════════════════════════════════════════╗
-     ║  SHOWCASE - todayListStep2Grid (Horizontal Scroll)                       ║
-     ║  Minimal Elegance with Floating Price Tag Design                         ║
-     ╚══════════════════════════════════════════════════════════════════════════╝ */
-
-    /* Wrapper: overflow visible so hover lift is never clipped */
-    .today-article-grid-wrap {
-      overflow: visible;
-      padding: 0 0 0 0;
-    }
-
-    /* Horizontal Scroll Container - padding allows hover lift without clipping */
-    .today-article-grid {
-      display: flex;
-      flex-direction: row;
-      gap: 16px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding: 8px 8px 8px 12px;
-      margin-top: 0;
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-      scroll-padding-left: 20px;
-      scroll-padding-right: 20px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .today-article-grid::-webkit-scrollbar {
-      height: 6px;
-    }
-
-    .today-article-grid::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.06);
-      border-radius: 3px;
-    }
-
-    .today-article-grid::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-      border-radius: 3px;
-    }
-
-    /* Product Card - PC: fixed 170×240, Mobile: 130×170 */
-    .today-article-grid .product-tile {
-      flex: 0 0 auto;
-      width: 170px;
-      height: 240px;
-      min-height: 240px;
-      display: grid;
-      grid-template-rows: 170px minmax(70px, auto);
-      position: relative;
-      background: var(--card);
-      border-radius: 12px;
-      overflow: visible;
-      cursor: pointer;
-      scroll-snap-align: start;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    /* Hover lift effect - Amazon-like card hover */
-    .today-article-grid .product-tile:hover {
-      transform: translateY(-8px);
-      z-index: 10;
-      box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.25), 0 4px 12px -4px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Selected state - above other cards (no green highlight) */
-    .today-article-grid .product-tile.selected {
-      z-index: 10;
-    }
-
-    .today-article-grid .product-tile:active {
-      transform: translateY(-4px);
-      transition-duration: 0.15s;
-    }
-
-    /* Image Frame */
-    .today-article-grid .product-tile__frame {
-      position: relative;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(145deg, #0c1424 0%, #162033 100%);
-      border-radius: 12px 12px 0 0;
-      overflow: hidden;
-      box-shadow:
-        0 8px 32px -8px rgba(0, 0, 0, 0.4),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-    }
-
-    .today-article-grid .product-tile__frame img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform 0.5s ease, opacity 0.3s ease;
-    }
-
-    .today-article-grid .product-tile:hover .product-tile__frame img {
-      transform: scale(1.08);
-    }
-
-    /* Placeholder */
-    .today-article-grid .product-tile__empty {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      place-items: center;
-      font-size: 3rem;
-      color: var(--muted);
-      opacity: 0.5;
-    }
-
-    /* Floating Price Badge - Green like price-block but opaque */
-    .today-article-grid .product-tile__badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      padding: 6px 14px;
-      background: linear-gradient(120deg, rgba(34, 197, 94, 0.9), rgba(34, 197, 94, 0.8));
-      border-radius: 20px;
-      border: 1px solid rgba(34, 197, 94, 0.95);
-      box-shadow: 0 4px 12px -2px rgba(34, 197, 94, 0.5);
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #052e17;
-      z-index: 5;
-      transform: translateY(0);
-      opacity: 1;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    /* Dark mode badge */
-    [data-theme="dark"] .today-article-grid .product-tile__badge {
-      background: linear-gradient(120deg, rgba(34, 197, 94, 0.95), rgba(34, 197, 94, 0.85));
-      border-color: rgba(34, 197, 94, 1);
-      color: #052e17;
-      box-shadow: 0 4px 16px -2px rgba(34, 197, 94, 0.6);
-    }
-
-    /* Info Section - Name only */
-    .today-article-grid .product-tile__details {
-      padding: 12px 4px 8px;
-    }
-
-    /* Product Name - Centered */
-    .today-article-grid .product-tile__name {
-      margin: 0;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1.4;
-      text-align: center;
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      overflow: hidden;
-    }
-
-    /* Dark Mode - Noticeable border for each article */
-    [data-theme="dark"] .today-article-grid .product-tile {
-      background: transparent;
-      border: 1.5px solid rgba(148, 163, 184, 0.45) !important;
-      box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.15), 0 4px 12px -4px rgba(0, 0, 0, 0.4) !important;
-    }
-
-    [data-theme="dark"] .today-article-grid .product-tile:hover {
-      border-color: rgba(148, 163, 184, 0.65) !important;
-      box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.25), 0 12px 24px -8px rgba(0, 0, 0, 0.5) !important;
-    }
-
-    [data-theme="dark"] .today-article-grid .product-tile__frame {
-      background: linear-gradient(145deg, #0a101c 0%, #131d2e 100%);
-      box-shadow:
-        0 8px 32px -8px rgba(0, 0, 0, 0.6),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-    }
-
-    /* Mobile - Fixed size 130x150 */
-    @media (max-width: 768px) {
-      .today-article-grid {
-        gap: 12px;
-        padding: 8px 16px 16px;
-      }
-
-      .today-article-grid .product-tile {
-        width: 130px;
-        height: 170px;
-        min-height: 170px;
-        grid-template-rows: 110px minmax(60px, auto);
-      }
-
-      .today-article-grid .product-tile__frame img,
-      .today-article-grid .product-tile__empty {
-        width: 100%;
-        height: 100%;
-      }
-
-      .today-article-grid .product-tile__badge {
-        padding: 4px 10px;
-        font-size: 0.8rem;
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .today-article-grid .product-tile__details {
-        padding: 6px 4px 5px;
-      }
-
-      .today-article-grid .product-tile__name {
-        font-size: 0.85rem;
-        line-height: 1.2;
-      }
-    }
-
-    /* 620px - Fixed 130x170 */
-    @media (max-width: 620px) {
-      .today-article-grid .product-tile {
-        width: 130px;
-        height: 170px;
-        min-height: 170px;
-        grid-template-rows: 110px minmax(60px, auto);
-      }
-    }
-
-    /* Extra Small */
-    @media (max-width: 400px) {
-      .today-article-grid {
-        gap: 10px;
-        padding: 8px 12px 14px;
-      }
-
-      .today-article-grid .product-tile {
-        width: 130px;
-        height: 170px;
-        min-height: 170px;
-        grid-template-rows: 110px minmax(60px, auto);
-      }
-
-      .today-article-grid .product-tile__frame img,
-      .today-article-grid .product-tile__empty {
-        width: 100%;
-        height: 100%;
-      }
-
-      .today-article-grid .product-tile__details {
-        padding: 5px 3px 4px;
-      }
-
-      .today-article-grid .product-tile__name {
-        font-size: 0.78rem;
-        line-height: 1.15;
-      }
-    }
-
-    /* Reduced Motion */
-    @media (prefers-reduced-motion: reduce) {
-      .today-article-grid .product-tile {
-        transition: none;
-      }
-
-      .today-article-grid .product-tile:hover {
-        transform: none;
-      }
     }
 
     header {
@@ -1004,7 +780,7 @@
       }
 
       .content {
-        padding: 4px 12px 4px 12px;
+        padding: 14px;
       }
 
       .card-header {
@@ -1153,12 +929,6 @@
       gap: 16px;
       max-width: 100%;
       box-sizing: border-box;
-    }
-
-    /* Today and discount sections padding - sections before #todayGrid and #saleGrid */
-    .section:has(+ #todayGrid),
-    .section:has(+ #saleGrid) {
-      padding: 10px 5px 10px 3px;
     }
 
     .stories-strip {
@@ -1408,18 +1178,6 @@
       padding-top: 16px;
     }
 
-    /* Visitor count badge (real count, discreet) */
-    .visitor-badge {
-      display: inline-block;
-      margin-top: 8px;
-      font-size: 0.85rem;
-      opacity: 0.85;
-    }
-
-    .visitor-badge[aria-hidden="true"]:empty {
-      display: none;
-    }
-
     .section h2 {
       margin: 0;
       font-size: clamp(18px, 2.8vw, 26px)
@@ -1472,9 +1230,7 @@
     }
 
     .card {
-      position: relative;
-      /* Fond uni journalier pour toute la carte (pas de dégradé sombre en haut) */
-      background: var(--card);
+      background: linear-gradient(180deg, #0b1220, var(--card));
       border: 1.5px solid rgba(0, 0, 0, 0.25);
       border-radius: 14px;
       overflow: hidden;
@@ -1494,6 +1250,44 @@
 
     .card::before {
       display: none;
+    }
+
+    /* Article ID badge: visible in edit mode (exemple_dynamic) to avoid bugs when two items have same name. Hidden in index.html. */
+    .article-id-badge,
+    .video-id-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 5;
+      font-family: ui-monospace, monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(14, 165, 233, 0.95);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+      letter-spacing: 0.02em;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      direction: ltr;
+    }
+
+    .video-id-badge {
+      background: rgba(139, 92, 246, 0.95);
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    }
+
+    [data-theme="dark"] .article-id-badge {
+      background: rgba(14, 165, 233, 0.9);
+      color: #f8fafc;
+    }
+
+    [data-theme="dark"] .video-id-badge {
+      background: rgba(139, 92, 246, 0.9);
+      color: #f8fafc;
     }
 
     .card:hover,
@@ -1711,34 +1505,33 @@
     }
 
     .content {
-      padding: 4px 12px 4px 12px;
+      padding: 16px;
       color: var(--text);
       font-size: 0.95rem;
       line-height: 1.5;
       display: grid;
       gap: 6px;
       background: var(--card);
-      /* Ligne claire pour séparer visuellement l'image du contenu */
-      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.03);
       border-radius: 0;
       box-shadow: none;
     }
 
     [data-theme="dark"] .content {
       background: var(--card);
-      /* Ligne un peu plus visible en mode sombre */
-      border-top: 1px solid rgba(148, 163, 184, 0.55);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
       box-shadow: none;
     }
 
-    .img .price-block,
+    .content .price-block,
     .content .row,
     .content .chip,
     .content .variants-box,
     .content .variant-label,
     .content .color-msg,
     .content .muted {
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       font-weight: 600;
       font-family: inherit;
     }
@@ -1752,74 +1545,12 @@
       margin: 0 auto;
     }
 
-    /* Restore background gradient for videosGrid cards to match TEST.html */
-    #videosGrid .card {
-      background: linear-gradient(180deg, #0b1220, var(--card));
-    }
-
-    /* PC: Old article grid – flexible cards (clamp + min-height), no fixed 255×450 */
-    #todayGrid .card,
-    #saleGrid .card {
-      min-height: 320px !important;
-    }
-
     #todayGrid .content,
     #saleGrid .content,
     #videosGrid .content {
       font-size: 0.95rem;
       font-weight: 600;
       font-family: inherit;
-    }
-
-    /* Restore old padding and border for videosGrid content */
-    #videosGrid .content {
-      padding: 16px;
-      border: none;
-      border-top: 1px solid rgba(0, 0, 0, 0.03);
-    }
-
-    [data-theme="dark"] #videosGrid .content {
-      border: none;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    /* Restore chip and row styles for videosGrid to match TEST.html */
-    #videosGrid .content .chip {
-      gap: 6px;
-      padding: 6px 12px;
-      font-size: 0.95rem;
-      background: rgba(226, 232, 240, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      color: #0f172a;
-      border-radius: 999px;
-    }
-
-    #videosGrid .content .row {
-      gap: 4px;
-      margin: 0;
-    }
-
-    [data-theme="dark"] #videosGrid .content .chip {
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      color: #86efac;
-    }
-
-    /* Align title to right for videosGrid cards */
-    #videosGrid .card-header {
-      justify-content: flex-end;
-    }
-
-    #videosGrid .card-header .title {
-      text-align: right;
-    }
-
-    [data-theme="dark"] #videosGrid .card-header {
-      justify-content: flex-end;
-    }
-
-    [data-theme="dark"] #videosGrid .card-header .title {
-      text-align: right;
     }
 
     /* Ensure rounded top corners for images in today, sale, and videos grids */
@@ -1875,45 +1606,58 @@
       line-height: 1.25 !important;
     }
 
-    /* Compact price block (main grids only) */
-    #todayGrid .img .price-block,
-    #saleGrid .img .price-block {
-      bottom: 10px !important;
-      right: 10px !important;
-      padding: 5px 12px !important;
-      gap: 5px !important;
-      border-radius: 18px !important;
-      font-size: 0.85rem !important;
-    }
-
-    #todayGrid .img .price-block .now,
-    #saleGrid .img .price-block .now {
-      font-size: 0.9rem !important;
-    }
-
-    #todayGrid .img .price-block .was,
-    #saleGrid .img .price-block .was {
-      font-size: 0.8rem !important;
-    }
-
-    /* Compact variants box (main grids only) */
+    /* Variants box contains price + sizes + colors (main grids only) */
     #todayGrid .variants-box,
     #saleGrid .variants-box {
-      padding: 6px 8px !important;
-      gap: 4px !important;
-      border-radius: 8px !important;
-      margin: 2px 0 !important;
+      padding: 8px 10px !important;
+      gap: 6px !important;
+      border-radius: 12px !important;
+      margin: 0 !important;
+      background: rgba(226, 232, 240, 0.9) !important;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    [data-theme="dark"] #todayGrid .variants-box,
+    [data-theme="dark"] #saleGrid .variants-box {
+      background: rgba(15, 23, 42, 0.72) !important;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    #todayGrid .variants-box .price-block,
+    #saleGrid .variants-box .price-block {
+      padding: 0 0 6px 0 !important;
+      margin: 0 !important;
+      gap: 8px !important;
+      border: none !important;
+      background: transparent !important;
+      border-radius: 0 !important;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3) !important;
+    }
+
+    [data-theme="dark"] #todayGrid .variants-box .price-block,
+    [data-theme="dark"] #saleGrid .variants-box .price-block {
+      border-bottom-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    #todayGrid .variants-box .price-block .now,
+    #saleGrid .variants-box .price-block .now {
+      font-size: 1.1rem !important;
+    }
+
+    #todayGrid .variants-box .price-block .was,
+    #saleGrid .variants-box .price-block .was {
+      font-size: 0.85rem !important;
     }
 
     /* Compact variant labels and lines (main grids only) */
     #todayGrid .variant-label,
     #saleGrid .variant-label {
-      font-size: 0.9rem !important;
+      font-size: 1rem !important;
     }
 
     #todayGrid .variant-line,
     #saleGrid .variant-line {
-      gap: 4px !important;
+      gap: 6px !important;
     }
 
     #todayGrid .sizes-text,
@@ -1961,57 +1705,42 @@
       font-weight: 500;
     }
 
-    .img .price-block {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      display: inline-flex;
-      flex-wrap: wrap;
+    .content .price-block {
+      display: grid;
+      grid-template-columns: auto 1fr;
       align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: linear-gradient(120deg, rgba(34, 197, 94, 0.9), rgba(34, 197, 94, 0.8));
-      border: 1px solid rgba(34, 197, 94, 0.95);
-      box-shadow: 0 4px 12px -2px rgba(34, 197, 94, 0.5);
+      gap: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: linear-gradient(120deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.06));
+      border: 1px solid rgba(34, 197, 94, 0.22);
+      box-shadow: 0 10px 30px -20px rgba(34, 197, 94, 0.8);
+    }
+
+    [data-theme="dark"] .content .price-block {
+      background: linear-gradient(120deg, rgba(34, 197, 94, 0.24), rgba(34, 197, 94, 0.14));
+      border-color: rgba(34, 197, 94, 0.45);
+      box-shadow: 0 10px 30px -18px rgba(34, 197, 94, 0.8);
+    }
+
+    .content .price-block .now {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #065f46;
+    }
+
+    [data-theme="dark"] .content .price-block .now {
+      color: #f8fafc;
+    }
+
+    .content .price-block .was {
       font-size: 0.9rem;
-      font-weight: 700;
-      color: #052e17;
-      z-index: 5;
-    }
-
-    [data-theme="dark"] .img .price-block {
-      background: linear-gradient(120deg, rgba(34, 197, 94, 0.95), rgba(34, 197, 94, 0.85));
-      border-color: rgba(34, 197, 94, 1);
-      box-shadow: 0 4px 16px -2px rgba(34, 197, 94, 0.6);
-      color: #052e17;
-    }
-
-    .img .price-block .now {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #052e17;
-    }
-
-    [data-theme="dark"] .img .price-block .now {
-      color: #052e17;
-    }
-
-    .img .price-block .was {
-      font-size: 0.8rem;
       text-decoration: line-through;
-      opacity: 0.8;
-      color: #052e17;
+      opacity: 0.65;
     }
 
-    .img .price-block .pct {
-      font-size: 0.75rem;
-    }
-
-    .img .price-block .label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: #052e17;
+    .content .price-block .pct {
+      justify-self: start;
     }
 
     .content .row {
@@ -2024,9 +1753,8 @@
     .content .chip {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
-      padding: 3px 8px;
-      font-size: 0.8rem;
+      gap: 6px;
+      padding: 6px 12px;
     }
 
     .content .chip::before {
@@ -2047,24 +1775,24 @@
     .variants-box {
       width: 100%;
       display: grid;
-      gap: 4px;
+      gap: 6px;
       background: rgba(226, 232, 240, 0.9);
       border: 1px solid rgba(148, 163, 184, 0.5);
-      border-radius: 8px;
-      padding: 6px 8px;
+      border-radius: 12px;
+      padding: 10px 12px;
       color: #0f172a;
     }
 
     .variant-line {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .variant-label {
-      font-size: 0.9rem;
-      font-weight: 700;
+      font-size: 1.2rem;
+      font-weight: 900;
       color: #000;
       background: none;
       border: none;
@@ -2087,11 +1815,11 @@
     .sizes-text {
       font-weight: 600;
       color: var(--text);
-      font-size: 0.8rem;
+      font-size: 0.9rem;
     }
 
     .chip.slim {
-      padding: 3px 8px;
+      padding: 4px 10px;
     }
 
     [data-theme="dark"] .price-block .label {
@@ -2143,36 +1871,10 @@
     .card-header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      flex-direction: row;
-      direction: rtl;
-      gap: 8px;
-      padding: 4px 0;
+      gap: 10px;
+      padding: 8px 0;
       border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-      margin-bottom: 4px;
-      min-height: 0;
-    }
-
-    .card-header .title {
-      font-size: 1rem;
-      line-height: 1.25;
-      margin: 0;
-      text-align: center;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .card-header .title.long-title {
-      font-size: 0.9rem;
-      text-align: right;
-    }
-
-    /* >=7 letters: align block from right (RTL start) */
-    .card-header:has(.title.long-title) {
-      justify-content: flex-start;
+      margin-bottom: 6px;
     }
 
     [data-theme="dark"] .card-header {
@@ -2205,35 +1907,23 @@
     }
 
     .title-area {
-      min-width: 0;
-      flex: 1;
       color: var(--title-color, #e5e7eb);
     }
 
     .color-swatches {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
+      gap: 8px;
       margin: 0;
     }
 
     .color-swatch {
-      width: 14px;
-      height: 14px;
+      width: 18px;
+      height: 18px;
       border-radius: 999px;
-      border: 1.5px solid #ffffff30;
+      border: 2px solid #ffffff30;
       background: var(--swatch, #64748b);
       cursor: pointer;
-    }
-
-    .content .color-swatches {
-      gap: 3px;
-    }
-
-    .content .color-swatch {
-      width: 12px;
-      height: 12px;
-      border-width: 1px;
     }
 
     .color-swatch[data-color-name="أبيض"],
@@ -2259,80 +1949,22 @@
       box-shadow: 0 0 0 2px #7dd3fc;
     }
 
-    /* Pop message below color buttons - appears from down when clicking a swatch */
-    .variant-line:has(.colors-swatches) {
-      position: relative;
-    }
-
+    /* Inline micro message for color selection */
     .color-msg {
-      display: none;
-      margin: 0;
-      padding: 7px 12px;
+      display: inline-block;
+      margin-top: 6px;
+      padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(226, 232, 240, 0.95);
+      background: rgba(226, 232, 240, 0.9);
       border: 1px solid rgba(148, 163, 184, 0.45);
       color: #0f172a;
       font-weight: 600;
-      font-size: 0.76rem;
-      line-height: 1.25;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      white-space: nowrap;
+      font-size: 12px;
+      transition: opacity 0.2s ease;
     }
 
     .color-msg[hidden] {
-      display: none !important;
-    }
-
-    .variant-line .color-msg:not([hidden]) {
-      display: inline-block !important;
-      position: absolute;
-      margin: 0;
-      z-index: 10;
-      transform: translateX(-50%);
-      animation: color-msg-pop 0.25s ease forwards;
-    }
-
-    @keyframes color-msg-pop {
-      from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(8px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-
-    .content .color-msg {
-      font-size: 0.76rem;
-      padding: 7px 12px;
-    }
-
-    /* Mobile: pop in flow inside variants-box so it is not clipped, show in middle */
-    @media (max-width: 768px) {
-      .variants-box {
-        overflow: visible;
-      }
-
-      .variant-line:has(.colors-swatches) {
-        overflow: visible;
-      }
-
-      .card .content {
-        overflow: visible;
-      }
-
-      .variant-line .color-msg:not([hidden]) {
-        position: static !important;
-        left: auto !important;
-        top: auto !important;
-        transform: none !important;
-        display: block !important;
-        margin-top: 8px;
-        width: 100%;
-        text-align: center;
-      }
+      display: none;
     }
 
     [data-theme="dark"] .color-msg {
@@ -2516,7 +2148,7 @@
     .btn.primary {
       background: #22c55e;
       color: #052e17;
-      font-weight: 900
+      font-weight: 900;
     }
 
     /* Boutons réseaux sociaux en mode clair: style 3D gris avec ombre */
@@ -3178,6 +2810,35 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Mode d’affichage vertical pour voir tous les articles sans défilement horizontal */
+    .h-scroll.vertical-view {
+      flex-wrap: wrap;
+      overflow-x: visible;
+      overflow-y: visible;
+      scroll-snap-type: none;
+      scroll-behavior: auto;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    /* Ajustements spécifiques à la liste "Aujourd’hui – étape 2" en mode vertical */
+    #todayListStep2Grid.vertical-view {
+      cursor: default;
+      justify-content: flex-start;
+    }
+
+    #todayListStep2Grid.vertical-view .card {
+      scroll-snap-align: none;
+    }
+
+    /* Sur mobile : 2 cartes par ligne quand on voit tous les articles */
+    @media (max-width: 768px) {
+      #todayListStep2Grid.vertical-view .card {
+        flex: 0 0 calc(50% - 12px);
+        max-width: calc(50% - 12px);
+      }
+    }
+
     .h-scroll .card {
       flex: 0 0 auto;
       width: clamp(192px, 24vw, 264px);
@@ -3237,6 +2898,22 @@
         flex: 0 0 30% !important;
         height: 30% !important;
       }
+
+      /* PC: Larger image area for Today List Step 2 */
+      #todayListStep2Grid .card {
+        width: clamp(176px, 20vw, 228px);
+        height: clamp(236px, 26vw, 300px);
+      }
+
+      #todayListStep2Grid .card .img {
+        height: 78% !important;
+        flex: 0 0 78% !important;
+      }
+
+      #todayListStep2Grid .card .content {
+        height: 22% !important;
+        flex: 0 0 22% !important;
+      }
     }
 
     /* Square image for list_step_2 - larger image area */
@@ -3263,7 +2940,7 @@
     .h-scroll .card .content {
       flex: 0 0 30%;
       height: 30%;
-      padding: 4px 12px 4px 12px !important;
+      padding: 8px 8px !important;
       gap: 4px !important;
       display: flex;
       flex-direction: column;
@@ -3284,27 +2961,49 @@
       text-overflow: ellipsis;
     }
 
-    /* Compact price block - larger size */
-    .h-scroll .card .price-block {
-      padding: 8px 12px !important;
-      gap: 8px !important;
-      border-radius: 10px !important;
+    /* Variants box contains price + sizes (list_step_2) */
+    .h-scroll .card .variants-box {
+      display: block !important;
+      padding: 0 !important;
       margin: 0 !important;
+      gap: 0 !important;
+      background: rgba(148, 163, 184, 0.12) !important;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 10px !important;
     }
 
-    .h-scroll .card .price-block .label {
+    [data-theme="dark"] .h-scroll .card .variants-box {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .h-scroll .card .variants-box .price-block {
+      padding: 8px 12px !important;
+      gap: 8px !important;
+      margin: 0 !important;
+      border: none !important;
+      border-radius: 10px 10px 0 0 !important;
+      background: transparent !important;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25) !important;
+    }
+
+    [data-theme="dark"] .h-scroll .card .variants-box .price-block {
+      border-bottom-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .h-scroll .card .variants-box .price-block .label {
       font-size: clamp(0.85rem, 1.8vw, 1rem) !important;
     }
 
-    .h-scroll .card .price-block .now {
+    .h-scroll .card .variants-box .price-block .now {
       font-size: clamp(1.1rem, 2.4vw, 1.3rem) !important;
     }
 
-    .h-scroll .card .price-block .was {
+    .h-scroll .card .variants-box .price-block .was {
       font-size: clamp(0.8rem, 1.6vw, 0.9rem) !important;
     }
 
-    .h-scroll .card .price-block .pct {
+    .h-scroll .card .variants-box .price-block .pct {
       font-size: clamp(0.8rem, 1.6vw, 0.9rem) !important;
     }
 
@@ -3313,26 +3012,20 @@
       display: none !important;
     }
 
-    /* Create a special compact sizes box for list_step_2 */
-    .h-scroll .card .variants-box {
-      display: block !important;
-      padding: 0 !important;
-      background: transparent !important;
-      border: none !important;
-      margin: 0 !important;
-      gap: 0 !important;
-    }
-
-    /* Style the sizes line as a special compact box */
+    /* Sizes line inside variants box */
     .h-scroll .card .variants-box .variant-line:has(.sizes-text) {
       display: flex !important;
       align-items: center;
       gap: 5px;
       padding: 5px 8px;
-      background: rgba(148, 163, 184, 0.12);
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      border-radius: 6px;
-      margin: 2px 0 0 0 !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 0 10px 10px !important;
+      margin: 0 !important;
+    }
+
+    [data-theme="dark"] .h-scroll .card .variants-box .variant-line:has(.sizes-text) {
+      background: transparent !important;
     }
 
     .h-scroll .card .variants-box .variant-line:has(.sizes-text) .variant-label {
@@ -3363,14 +3056,8 @@
       order: 1;
     }
 
-    .h-scroll .card .price-block {
-      order: 2;
-      margin-bottom: 0 !important;
-    }
-
     .h-scroll .card .variants-box {
-      order: 3;
-      margin-top: 4px !important;
+      order: 2;
       margin-bottom: 0 !important;
       flex-shrink: 0;
     }
@@ -3481,81 +3168,6 @@
       box-sizing: border-box;
     }
 
-    /* todayListStep2Grid - overflow visible so hover lift is never clipped */
-    #todayListStep2 {
-      overflow: visible !important;
-      padding: 12px 0 0 0 !important;
-    }
-
-    /* Toggle button + vertical view for todayListStep2Grid */
-    .today-list-toggle-wrap {
-      display: flex;
-      justify-content: flex-end;
-      padding: 0 4px 4px;
-    }
-
-    #toggleTodayListViewBtn {
-      font-size: 0.9rem;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: linear-gradient(135deg, rgba(148, 163, 184, 0.22), rgba(148, 163, 184, 0.08));
-      color: inherit;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 6px 18px -10px rgba(15, 23, 42, 0.45);
-      transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-    }
-
-    #toggleTodayListViewBtn:hover {
-      background: linear-gradient(135deg, rgba(148, 163, 184, 0.30), rgba(148, 163, 184, 0.12));
-      box-shadow: 0 10px 24px -12px rgba(15, 23, 42, 0.65);
-      transform: translateY(-1px);
-    }
-
-    #toggleTodayListViewBtn:active {
-      transform: translateY(0);
-      box-shadow: 0 4px 14px -10px rgba(15, 23, 42, 0.7);
-    }
-
-    [data-theme="dark"] #toggleTodayListViewBtn {
-      border-color: rgba(148, 163, 184, 0.6);
-      background: linear-gradient(135deg, rgba(30, 64, 175, 0.72), rgba(15, 23, 42, 0.95));
-      box-shadow: 0 10px 28px -14px rgba(15, 23, 42, 0.95);
-    }
-
-    [data-theme="dark"] #toggleTodayListViewBtn:hover {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.85), rgba(15, 23, 42, 1));
-      box-shadow: 0 14px 32px -16px rgba(15, 23, 42, 1);
-    }
-
-    .today-article-grid.vertical-view {
-      flex-wrap: wrap;
-      justify-content: flex-start;
-      overflow-x: hidden;
-      overflow-y: visible;
-      max-height: none;
-    }
-
-    @media (max-width: 768px) {
-      #todayListStep2Grid.today-article-grid {
-        padding: 8px 2px 5px 2px !important;
-      }
-
-      .today-article-grid.vertical-view {
-        gap: 12px 10px;
-        padding: 8px 8px 10px;
-      }
-
-      /* Sur mobile, afficher 3 articles par ligne en mode vertical-view */
-      .today-article-grid.vertical-view .product-tile {
-        flex: 0 0 calc(33.333% - 12px);
-        max-width: calc(33.333% - 12px);
-      }
-    }
-
     .h-scroll .card.selected {
       border-color: #22c55e !important;
       border-width: 3px !important;
@@ -3584,45 +3196,32 @@
         box-shadow: 0 20px 42px -26px rgba(0, 0, 0, 0.6), 0 8px 22px -16px rgba(34, 197, 94, 0.25) !important;
       }
 
-      /* Mobile: card content padding */
+      /* Mobile: Add padding to card content for better visibility when sizes overflow */
       .h-scroll .card .content {
-        padding: 4px 12px 4px 12px !important;
+        padding-bottom: 12px !important;
       }
 
-      /* Mobile: Reduce price box size by ~10% */
-      .h-scroll .card .price-block {
+      /* Mobile: Reduce price inside variants-box by ~10% */
+      .h-scroll .card .variants-box .price-block {
         padding: 7px 11px !important;
-        /* Reduced from 8px 12px (approx 10% reduction) */
         gap: 7px !important;
-        /* Reduced from 8px */
-        border-radius: 9px !important;
-        /* Slightly reduced from 10px */
+        border-radius: 0 !important;
       }
 
-      .h-scroll .card .price-block .label {
+      .h-scroll .card .variants-box .price-block .label {
         font-size: clamp(0.765rem, 1.62vw, 0.9rem) !important;
-        /* Reduced by ~10% from 0.85rem-1rem */
       }
 
-      .h-scroll .card .price-block .now {
+      .h-scroll .card .variants-box .price-block .now {
         font-size: clamp(0.99rem, 2.16vw, 1.17rem) !important;
-        /* Reduced by ~10% from 1.1rem-1.3rem */
       }
 
-      .h-scroll .card .price-block .was {
+      .h-scroll .card .variants-box .price-block .was {
         font-size: clamp(0.72rem, 1.44vw, 0.81rem) !important;
-        /* Reduced by ~10% from 0.8rem-0.9rem */
       }
 
-      .h-scroll .card .price-block .pct {
+      .h-scroll .card .variants-box .price-block .pct {
         font-size: clamp(0.72rem, 1.44vw, 0.81rem) !important;
-        /* Reduced by ~10% from 0.8rem-0.9rem */
-      }
-
-      /* Mobile: Make size box closer/adhere to price box - reduce gap */
-      .h-scroll .card .variants-box {
-        margin-top: 1px !important;
-        /* Reduced from 4px to 1px for closer adhesion */
       }
 
       /* Mobile: Reduce sizes for today and discount sections (main grids only, NOT ListStep2) */
@@ -3634,7 +3233,7 @@
 
       #todayGrid .content,
       #saleGrid .content {
-        padding: 4px 12px 4px 12px !important;
+        padding: 8px 10px !important;
         gap: 3px !important;
         font-size: 0.85rem !important;
       }
@@ -3655,29 +3254,28 @@
         /* Original size for long titles */
       }
 
-      #todayGrid .img .price-block,
-      #saleGrid .img .price-block {
-        bottom: 8px !important;
-        right: 8px !important;
-        padding: 4px 10px !important;
-        gap: 4px !important;
-        border-radius: 16px !important;
-        font-size: 0.8rem !important;
+      /* Price is inside variants-box */
+      #todayGrid .variants-box .price-block,
+      #saleGrid .variants-box .price-block {
+        padding: 0 0 6px 0 !important;
+        gap: 6px !important;
       }
 
-      #todayGrid .img .price-block .label,
-      #saleGrid .img .price-block .label {
-        font-size: 0.8rem !important;
+      /* Reduce price label (السعر:) by 10% in mobile */
+      #todayGrid .variants-box .price-block .label,
+      #saleGrid .variants-box .price-block .label {
+        font-size: 1.215rem !important;
       }
 
-      #todayGrid .img .price-block .now,
-      #saleGrid .img .price-block .now {
-        font-size: 0.85rem !important;
+      /* Increase price by 10% in mobile */
+      #todayGrid .variants-box .price-block .now,
+      #saleGrid .variants-box .price-block .now {
+        font-size: 1.045rem !important;
       }
 
-      #todayGrid .img .price-block .was,
-      #saleGrid .img .price-block .was {
-        font-size: 0.7rem !important;
+      #todayGrid .variants-box .price-block .was,
+      #saleGrid .variants-box .price-block .was {
+        font-size: 0.75rem !important;
       }
 
       #todayGrid .variants-box,
@@ -4441,7 +4039,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      padding: 20px;
       opacity: 0;
       transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -4470,7 +4068,7 @@
     .lightbox-content {
       position: relative;
       max-width: 95vw;
-      max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 40px);
+      max-height: 90vh;
       display: flex;
       flex-direction: row;
       align-items: flex-start;
@@ -4527,10 +4125,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 16px;
-      overflow: hidden;
-      background: transparent !important;
-      background-color: transparent !important;
     }
 
     .lightbox-image {
@@ -4631,12 +4225,10 @@
     }
 
     .lightbox-price {
-      display: inline-flex;
+      display: flex;
       align-items: baseline;
       gap: 15px;
       padding: 20px 24px;
-      width: fit-content;
-      max-width: 100%;
       background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
       border: 2px solid rgba(34, 197, 94, 0.3);
       border-radius: 18px;
@@ -4668,48 +4260,6 @@
       color: var(--muted);
     }
 
-    /* PC: lightbox – title centered, picture +20%, price font -10% */
-    @media (min-width: 769px) {
-      .lightbox-content .lightbox-title {
-        text-align: center;
-      }
-
-      .lightbox-media-wrapper {
-        width: 300px;
-        min-width: 300px;
-        max-width: 300px;
-        height: 550px;
-        min-height: 550px;
-        max-height: 550px;
-        flex: 0 0 300px;
-        border-radius: 16px;
-        overflow: hidden;
-      }
-
-      .lightbox-image {
-        width: 300px;
-        height: 550px;
-        min-width: 300px;
-        min-height: 550px;
-        object-fit: cover;
-        border-radius: 16px;
-      }
-
-      .lightbox-price {
-        font-size: 0.72em;
-        width: fit-content;
-        max-width: 100%;
-      }
-
-      .lightbox-price .now {
-        font-size: 23px;
-      }
-
-      .lightbox-price .was {
-        font-size: 13px;
-      }
-    }
-
     .lightbox-chips {
       display: flex;
       flex-wrap: wrap;
@@ -4734,14 +4284,10 @@
       box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
     }
 
-    /* Show note/muted text in lightbox */
-    .lightbox-content .lightbox-info-text,
-    .lightbox-content .muted {
-      display: block !important;
-      color: var(--muted);
-      font-size: 0.85rem;
-      font-weight: 500;
-      line-height: 1.5;
+    .lightbox-info-text {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text);
     }
 
     .lightbox-close,
@@ -4942,55 +4488,6 @@
       color: #f1f5f9 !important;
     }
 
-    /* Mobile: Today & Discount sections – title and sort-bar on same line, mini sort-bar to fit */
-    @media (max-width: 768px) {
-
-      .section:has(+ #todayGrid),
-      .section:has(+ #saleGrid) {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .section:has(+ #todayGrid) {
-        padding: 10px 7px 10px 3px;
-      }
-
-      .section:has(+ #saleGrid) {
-        padding: 10px 7px 10px 3px;
-      }
-
-      .section:has(+ #todayGrid) h2,
-      .section:has(+ #saleGrid) h2 {
-        margin: 0;
-        flex: 0 0 auto;
-      }
-
-      .section:has(+ #todayGrid) h2 {
-        font-size: 1.05em;
-      }
-
-      .section:has(+ #todayGrid) .sort-bar,
-      .section:has(+ #saleGrid) .sort-bar {
-        flex: 0 1 auto;
-      }
-
-      .section:has(+ #todayGrid) .sort-bar .label,
-      .section:has(+ #todayGrid) .sort-bar select,
-      .section:has(+ #saleGrid) .sort-bar .label,
-      .section:has(+ #saleGrid) .sort-bar select {
-        font-size: 11px;
-      }
-
-      .section:has(+ #todayGrid) .sort-bar select,
-      .section:has(+ #saleGrid) .sort-bar select {
-        padding: 5px 8px;
-        max-width: 110px;
-      }
-    }
-
     @media (max-width: 1024px) {
 
       .lightbox-content,
@@ -5004,14 +4501,7 @@
 
       .lightbox-media-wrapper {
         max-width: 100%;
-        width: fit-content;
-        height: fit-content;
-        background: transparent !important;
-        background-color: transparent !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
+        width: 100%;
       }
 
       .lightbox-info-panel {
@@ -5037,42 +4527,6 @@
       opacity: 0.9;
     }
 
-    /* Mobile lightbox: separate from PC – title centered, picture sizes mobile-only, no background */
-    @media (max-width: 768px) {
-      .lightbox-content .lightbox-title {
-        text-align: center;
-      }
-
-      .lightbox-media-wrapper {
-        max-width: 100%;
-        width: fit-content;
-        height: fit-content;
-        min-width: unset;
-        min-height: unset;
-        flex: 0 0 auto;
-        background: transparent !important;
-        background-color: transparent !important;
-        border-radius: 16px;
-        overflow: visible;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-      }
-
-      .lightbox-image {
-        max-width: 100%;
-        width: auto;
-        height: auto;
-        min-width: unset;
-        min-height: unset;
-        max-height: 50vh;
-        object-fit: contain;
-        border-radius: 16px;
-        display: block;
-      }
-    }
-
     @media (max-width: 767px) {
 
       .lightbox-content,
@@ -5082,13 +4536,6 @@
         padding: 20px;
         gap: 16px;
         border-radius: 20px;
-      }
-
-      .lightbox-media-wrapper {
-        background: transparent !important;
-        background-color: transparent !important;
-        width: auto;
-        height: auto;
       }
 
       .lightbox-image {
@@ -5129,23 +4576,6 @@
       .modal-overlay form select {
         padding: 12px 14px;
         font-size: 14px;
-      }
-    }
-
-    /* Index: hide article date in lightbox (all viewports) */
-    .lightbox-content .lightbox-date {
-      display: none !important;
-    }
-
-    /* Mobile: reduce .muted size further */
-    @media (max-width: 767px) {
-      .content .muted {
-        font-size: 0.72rem !important;
-      }
-
-      .lightbox-content .lightbox-info-text,
-      .lightbox-content .muted {
-        font-size: 0.72rem !important;
       }
     }
 
@@ -5206,6 +4636,12 @@
         display: inline-block !important;
         color: var(--text) !important;
         font-weight: 400 !important;
+      }
+
+      .lightbox-info-text {
+        font-size: 11px !important;
+        /* Further reduced from 13px */
+        line-height: 1.4 !important;
       }
 
       .lightbox-title {
@@ -5681,130 +5117,79 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.98) 100%);
-      backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(0, 0, 0, 0.6);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 10000;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      padding: 20px;
-    }
-
-    [data-theme="dark"] .maps-confirm-modal {
-      background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+      backdrop-filter: blur(4px);
     }
 
     .maps-confirm-modal.active {
       display: flex;
-      opacity: 1;
     }
 
     .maps-confirm-content {
-      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
-      backdrop-filter: blur(24px) saturate(200%);
-      border-radius: 24px;
-      padding: 36px 32px;
-      max-width: 420px;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
       width: 90%;
-      box-shadow:
-        0 25px 60px rgba(0, 0, 0, 0.4),
-        0 10px 30px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.9);
-      border: 2px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 2px solid var(--line);
       text-align: center;
-      animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      transform: scale(1);
-    }
-
-    [data-theme="dark"] .maps-confirm-content {
-      background: linear-gradient(145deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.95) 100%);
-      border-color: rgba(148, 163, 184, 0.3);
-      box-shadow:
-        0 25px 60px rgba(0, 0, 0, 0.6),
-        0 10px 30px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    }
-
-    @keyframes modalSlideIn {
-      from {
-        transform: scale(0.9) translateY(20px);
-        opacity: 0;
-      }
-
-      to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-      }
     }
 
     .maps-confirm-content h3 {
-      margin: 0 0 20px 0;
-      font-size: 24px;
+      margin: 0 0 16px 0;
+      font-size: 20px;
       color: var(--text);
-      font-weight: 800;
-      letter-spacing: 0.02em;
+      font-weight: 700;
     }
 
     .maps-confirm-content p {
-      margin: 0 0 28px 0;
+      margin: 0 0 24px 0;
       color: var(--muted);
-      font-size: 17px;
-      line-height: 1.7;
-      font-weight: 500;
+      font-size: 16px;
+      line-height: 1.6;
     }
 
     .maps-confirm-buttons {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       justify-content: center;
-      flex-wrap: wrap;
     }
 
     .maps-confirm-btn {
-      padding: 14px 28px;
-      border-radius: 12px;
+      padding: 12px 24px;
+      border-radius: 8px;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
       border: 2px solid transparent;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      min-width: 120px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      min-width: 100px;
     }
 
     .maps-confirm-btn.yes {
-      background: linear-gradient(135deg, var(--ok) 0%, #16a34a 100%);
+      background: var(--ok);
       color: #ffffff;
-      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
     }
 
     .maps-confirm-btn.yes:hover {
-      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 8px 24px rgba(34, 197, 94, 0.5);
-    }
-
-    .maps-confirm-btn.yes:active {
-      transform: translateY(0) scale(0.98);
+      background: #16a34a;
+      transform: scale(1.05);
     }
 
     .maps-confirm-btn.no {
       background: var(--input-bg);
       color: var(--text);
       border-color: var(--input-border);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .maps-confirm-btn.no:hover {
       background: var(--input-border);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-    }
-
-    .maps-confirm-btn.no:active {
-      transform: translateY(0) scale(0.98);
+      transform: scale(1.05);
     }
 
     .location-iframe-wrapper.active .location-iframe-delete-btn {
@@ -5927,6 +5312,19 @@
         padding: 20px 14px;
       }
     }
+
+    /* Hide and remove install app label */
+    .install-app-label,
+    #installAppLabel {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      width: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+    }
   </style>
 </head>
 
@@ -5974,21 +5372,33 @@
   <main class="container">
     <div class="section">
       <h2>🎯 جديد اليوم</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="btn" id="addProductBtn" aria-label="Add new product">✨ أضف منتجًا جديدًا</button>
+        <button type="button" class="btn" id="hideAllArticlesBtn" aria-label="Hide all products">🙈 إخفاء كل
+          المنتجات</button>
+        <button type="button" class="btn" id="orderTodayBtn" aria-label="Reorder today products">↕ ترتيب جديد
+          اليوم</button>
+      </div>
     </div>
     <div id="todayGrid" class="grid"></div>
     <div id="todayListStep2" class="section" style="display:none">
-      <div class="today-list-toggle-wrap">
-        <button type="button" id="toggleTodayListViewBtn" aria-expanded="false">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px;">
+        <h3 class="muted" style="margin:0;font-size:0.9rem;">منتجات أخرى اليوم</h3>
+        <button type="button" class="btn" id="toggleTodayListViewBtn" aria-label="Afficher tous les produits"
+          aria-expanded="false">
           ⬇ عرض كل المنتجات
         </button>
       </div>
-      <div class="today-article-grid-wrap">
-        <div id="todayListStep2Grid" class="today-article-grid" role="list" aria-label="قائمة المنتجات"></div>
-      </div>
+      <div class="h-scroll" id="todayListStep2Grid"></div>
     </div>
 
     <div class="section">
       <h2>🔥 تخفيضات هذا الأسبوع</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="btn" id="hideAllSaleBtn" aria-label="Hide all discounts">🙈 إخفاء كل
+          التخفيضات</button>
+        <button type="button" class="btn" id="orderSaleBtn" aria-label="Reorder discounts">↕ ترتيب التخفيضات</button>
+      </div>
     </div>
     <div id="saleGrid" class="grid"></div>
     <div id="saleListStep2" class="section" style="display:none">
@@ -5997,9 +5407,21 @@
 
     <div class="section">
       <h2 id="videosTitle">🎥 ستوري اليوم</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="btn" id="addVideoBtn" aria-label="Add new video">✨ أضف ستوري جديد</button>
+        <button type="button" class="btn" id="hideAllVideosBtn" aria-label="Hide all videos">🙈 إخفاء كل
+          الستوري</button>
+        <button type="button" class="btn" id="orderVideosBtn" aria-label="Reorder videos">↕ ترتيب الستوري</button>
+      </div>
     </div>
     <div id="videosGrid" class="grid"></div>
 
+    <div class="section" id="hiddenSection" style="display:none">
+      <h2>🙈 العناصر المخفية</h2>
+      <p class="muted" id="hiddenEmpty">لا عناصر مخفية.</p>
+      <div id="hiddenProducts" class="grid" style="margin-top:12px"></div>
+      <div id="hiddenVideos" class="grid" style="margin-top:12px"></div>
+    </div>
 
     <div class="cta-wrap">
       <!-- Social Links Box - Always visible -->
@@ -6026,16 +5448,28 @@
           ✕ حذف الخريطة
         </button>
       </div>
+    </div>
 
   </main>
 
   <footer class="container muted" id="mainFooter" style="padding:40px 0 60px"><span id="footerContent"><span
         id="footerContactText">Contactez-nous:</span> <a href="tel:+21693430636" id="footerPhoneLink" dir="ltr"
         style="color:inherit;text-decoration:underline;cursor:pointer">+216 93 430 636</a> <br /> - © <span
-        id="footerShopName">Boutique Saïda</span> <span id="year"></span> -<br /><span id="visitorCountBadge"
-        class="visitor-badge" aria-hidden="true"></span></span></footer>
+        id="footerShopName">Boutique Saïda</span> <span id="year"></span> -</span></footer>
 
-  <!-- Lightbox Modal -->
+  <!-- Admin Login Modal -->
+  <div class="modal-overlay" id="adminLoginModal" style="z-index: 100000; display: none;">
+    <form id="adminLoginForm" onsubmit="event.preventDefault(); window.loginAdmin();">
+      <h2>🔒 تسجيل الدخول للإدارة</h2>
+      <label for="adminPassword">كلمة المرور (Password)</label>
+      <input type="password" id="adminPassword" required placeholder="أدخل كلمة المرور"
+        style="background: var(--input-bg); border: 2px solid var(--input-border); border-radius: 14px; padding: 14px 16px; color: var(--text); font-size: 15px; width: 100%; box-sizing: border-box; margin-bottom: 20px;">
+      <button type="submit" class="primary" style="width: 100%;">تسجيل الدخول</button>
+      <p id="adminLoginError"
+        style="color: var(--danger); font-size: 14px; font-weight: 600; text-align: center; margin-top: 10px; display: none;">
+        كلمة المرور غير صحيحة</p>
+    </form>
+  </div>
   <div class="lightbox-overlay" id="lightboxOverlay">
     <div class="lightbox-content">
       <button class="lightbox-close" id="lightboxClose" aria-label="إغلاق">×</button>
@@ -6047,13 +5481,268 @@
     </div>
   </div>
 
+  <!-- Mobile Welcome Alert -->
+  <div class="mobile-welcome-overlay" id="mobileWelcomeOverlay" aria-hidden="true">
+    <div class="mobile-welcome-box" role="dialog" aria-modal="true" aria-labelledby="mobileWelcomeText">
+      <button type="button" class="mobile-welcome-close" id="mobileWelcomeClose" aria-label="Close">×</button>
+      <p class="mobile-welcome-text" id="mobileWelcomeText">مرحباً بك! استمتع بتصفح منتجاتنا على الهاتف.</p>
+      <label class="mobile-welcome-checkbox">
+        <input type="checkbox" id="mobileWelcomeDontShow" />
+        <span>لا تُظهر هذا مجددًا</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- React Admin Panel Root -->
+  <div id="react-admin-root"></div>
+
+  <!-- Vite + React Entry Script -->
+  <script type="module" src="/src/admin/main.jsx"></script>
+
+  <script>window.READ_ONLY_MODE = false;</script>
   <script src="/app.js"></script>
-  <!-- Location Section removed in read-only mode -->
+  <script>
+    /* Only for exemple_dynamic: move price-block from .img into .variants-box (index.html unchanged) */
+    (function () {
+      function movePriceIntoVariantsBox(card) {
+        var img = card.querySelector('.img');
+        var content = card.querySelector('.content');
+        if (!img || !content) return;
+        var priceBlock = img.querySelector('.price-block');
+        if (!priceBlock) return;
+        var variantsBox = content.querySelector('.variants-box');
+        if (!variantsBox) {
+          variantsBox = document.createElement('div');
+          variantsBox.className = 'variants-box';
+          variantsBox.setAttribute('aria-label', 'خيارات المنتج');
+          var muted = content.querySelector('.muted');
+          content.insertBefore(variantsBox, muted || null);
+        }
+        if (!priceBlock.querySelector('.label')) {
+          var label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = 'السعر:';
+          priceBlock.insertBefore(label, priceBlock.firstChild);
+        }
+        variantsBox.insertBefore(priceBlock, variantsBox.firstChild);
+      }
+      function runOnAllCards() {
+        var grids = document.querySelectorAll('#todayGrid .card, #saleGrid .card, #todayListStep2Grid .card, #saleListStep2Grid .card');
+        grids.forEach(movePriceIntoVariantsBox);
+      }
+      function init() {
+        runOnAllCards();
+        var observeTargets = document.querySelectorAll('#todayGrid, #saleGrid, #todayListStep2Grid, #saleListStep2Grid');
+        observeTargets.forEach(function (el) {
+          if (!el) return;
+          var obs = new MutationObserver(function () { runOnAllCards(); });
+          obs.observe(el, { childList: true, subtree: true });
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        setTimeout(init, 0);
+      }
+    })();
+  </script>
+
+  <!-- Location Section -->
+  <section class="location-section">
+    <div class="location-container">
+      <!-- Iframe Embed Section -->
+      <div class="location-iframe-section">
+        <h2 class="location-title" style="font-size: 24px; margin-bottom: 16px;">تضمين الخريطة (Embed Map)</h2>
+
+        <!-- Direct Link Field -->
+        <div class="location-input-wrapper" style="margin-bottom: 24px;">
+          <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="mapsLinkEnabled" checked style="width: 18px; height: 18px; cursor: pointer;" />
+            <label for="mapsLinkEnabled" style="margin: 0; cursor: pointer;">رابط خرائط جوجل المباشر (سيتم فتحه عند
+              الضغط على الخريطة)</label>
+          </div>
+          <div class="location-input-container">
+            <input type="text" id="mapsLinkInput" class="location-input" aria-label="رابط خرائط جوجل المباشر"
+              placeholder="الصق رابط خرائط جوجل هنا (مثال: https://maps.app.goo.gl/...)" autocomplete="off" />
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <button type="button" class="location-btn paste-btn" id="mapsLinkPasteBtn">لصق</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="location-input-wrapper">
+          <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="iframeEnabled" checked style="width: 18px; height: 18px; cursor: pointer;" />
+            <label for="iframeEnabled" style="margin: 0; cursor: pointer;">الصق كود iframe من خرائط جوجل</label>
+          </div>
+          <div class="location-input-container">
+            <textarea id="iframeInput" class="location-input" aria-label="كود iframe من خرائط جوجل"
+              placeholder="الصق كود &lt;iframe&gt; هنا..." rows="3"></textarea>
+            <div style="display: flex; flex-direction: row; gap: 8px;">
+              <button type="button" class="location-btn paste-btn" id="iframePasteBtn">لصق</button>
+              <button type="button" class="location-btn delete-btn" id="iframeDeleteBtn">حذف</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Social Media Links -->
+        <div class="location-input-wrapper" style="margin-top: 24px;">
+          <h3 class="location-title" style="font-size: 20px; margin-bottom: 16px;">روابط وسائل التواصل الاجتماعي</h3>
+
+          <div class="location-input-wrapper" style="margin-bottom: 16px;">
+            <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="facebookLinkEnabled" checked
+                style="width: 18px; height: 18px; cursor: pointer;" />
+              <label for="facebookLinkInput" style="margin: 0; cursor: pointer;">رابط فيسبوك</label>
+            </div>
+            <div class="location-input-container">
+              <input type="text" id="facebookLinkInput" class="location-input"
+                placeholder="الصق رابط فيسبوك هنا (مثال: https://facebook.com/username)" autocomplete="off" />
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="location-btn paste-btn" id="facebookPasteBtn">لصق</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="location-input-wrapper" style="margin-bottom: 16px;">
+            <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="instagramLinkEnabled" checked
+                style="width: 18px; height: 18px; cursor: pointer;" />
+              <label for="instagramLinkInput" style="margin: 0; cursor: pointer;">رابط إنستغرام</label>
+            </div>
+            <div class="location-input-container">
+              <input type="text" id="instagramLinkInput" class="location-input"
+                placeholder="الصق رابط إنستغرام هنا (مثال: https://instagram.com/username)" autocomplete="off" />
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="location-btn paste-btn" id="instagramPasteBtn">لصق</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="location-input-wrapper">
+            <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="tiktokLinkEnabled" checked
+                style="width: 18px; height: 18px; cursor: pointer;" />
+              <label for="tiktokLinkInput" style="margin: 0; cursor: pointer;">رابط تيك توك</label>
+            </div>
+            <div class="location-input-container">
+              <input type="text" id="tiktokLinkInput" class="location-input"
+                placeholder="الصق رابط تيك توك هنا (مثال: https://tiktok.com/@username)" autocomplete="off" />
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button type="button" class="location-btn paste-btn" id="tiktokPasteBtn">لصق</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="location-input-wrapper" style="margin-top: 24px;">
+            <h3 class="location-title" style="font-size: 20px; margin-bottom: 16px;">إعدادات التذييل / جهة الاتصال
+              (Footer & Contact)</h3>
+
+            <div class="location-input-wrapper" style="margin-bottom: 16px;">
+              <label for="footerContactPhraseSelect" style="margin-bottom: 8px; display: inline-block;">عبارة الاتصال
+                (ما يراه الزائر)</label>
+              <div class="location-input-container">
+                <select id="footerContactPhraseSelect" class="location-input" aria-label="عبارة الاتصال">
+                  <option value="Contactez-nous:">Contactez-nous: (Français)</option>
+                  <option value="اتصل بنا:">اتصل بنا: (العربية)</option>
+                  <option value="Contact us:">Contact us: (English)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="location-input-wrapper" style="margin-bottom: 16px;">
+              <label for="footerRegionCodeSelect" style="margin-bottom: 8px; display: inline-block;">رمز المنطقة (Region
+                code)</label>
+              <div class="location-input-container">
+                <select id="footerRegionCodeSelect" class="location-input" aria-label="رمز المنطقة">
+                  <option value="+216">+216 (Tunisia)</option>
+                  <option value="+33">+33 (France)</option>
+                  <option value="+213">+213 (Algeria)</option>
+                  <option value="+212">+212 (Morocco)</option>
+                  <option value="+1">+1 (USA/Canada)</option>
+                  <option value="+44">+44 (UK)</option>
+                  <option value="+39">+39 (Italy)</option>
+                  <option value="+49">+49 (Germany)</option>
+                  <option value="+966">+966 (Saudi Arabia)</option>
+                  <option value="+971">+971 (UAE)</option>
+                  <option value="+20">+20 (Egypt)</option>
+                  <option value="+90">+90 (Turkey)</option>
+                  <option value="+32">+32 (Belgium)</option>
+                  <option value="+41">+41 (Switzerland)</option>
+                  <option value="+31">+31 (Netherlands)</option>
+                  <option value="+34">+34 (Spain)</option>
+                  <option value="+351">+351 (Portugal)</option>
+                  <option value="+48">+48 (Poland)</option>
+                  <option value="+7">+7 (Russia)</option>
+                  <option value="+86">+86 (China)</option>
+                  <option value="+91">+91 (India)</option>
+                  <option value="+81">+81 (Japan)</option>
+                  <option value="+82">+82 (South Korea)</option>
+                  <option value="+61">+61 (Australia)</option>
+                  <option value="+55">+55 (Brazil)</option>
+                  <option value="+52">+52 (Mexico)</option>
+                  <option value="+27">+27 (South Africa)</option>
+                  <option value="">Other (اكتب أدناه)</option>
+                </select>
+              </div>
+              <div class="location-input-container" id="footerRegionCodeOtherWrap" style="margin-top:8px;display:none">
+                <input type="text" id="footerRegionCodeOther" class="location-input" placeholder="+XXX"
+                  aria-label="رمز المنطقة المخصص" maxlength="6" />
+              </div>
+            </div>
+
+            <div class="location-input-wrapper" style="margin-bottom: 16px;">
+              <label for="footerPhoneInput" style="margin-bottom: 8px; display: inline-block;">رقم الهاتف (بدون رمز
+                المنطقة) — النقر يتصل بالرقم</label>
+              <div class="location-input-container">
+                <input type="tel" id="footerPhoneInput" class="location-input" placeholder="93 430 636"
+                  aria-label="رقم الهاتف" autocomplete="tel" />
+              </div>
+            </div>
+
+            <div class="location-input-wrapper" style="margin-bottom: 16px;">
+              <label for="footerShopNameInput" style="margin-bottom: 8px; display: inline-block;">اسم المتجر (يظهر في
+                التذييل ©)</label>
+              <div class="location-input-container">
+                <input type="text" id="footerShopNameInput" class="location-input" placeholder="Boutique Saïda"
+                  aria-label="اسم المتجر" autocomplete="organization" />
+              </div>
+            </div>
+
+            <button type="button" class="location-btn paste-btn" id="footerContactSaveBtn">حفظ التذييل</button>
+          </div>
+
+          <div class="location-input-wrapper" style="margin-top: 24px;">
+            <h3 class="location-title" style="font-size: 20px; margin-bottom: 16px;">إعدادات رسالة الترحيب</h3>
+
+            <div class="location-input-wrapper" style="margin-bottom: 16px;">
+              <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="welcomeAlertEnabled" checked
+                  style="width: 18px; height: 18px; cursor: pointer;" />
+                <label for="welcomeAlertEnabled" style="margin: 0; cursor: pointer;">إظهار رسالة الترحيب</label>
+              </div>
+            </div>
+
+            <div class="location-input-wrapper">
+              <label for="welcomeAlertMessageInput" style="margin-bottom: 8px; display: inline-block;">نص رسالة
+                الترحيب</label>
+              <div class="location-input-container">
+                <textarea id="welcomeAlertMessageInput" class="location-input" rows="3"
+                  placeholder="اكتب رسالة الترحيب هنا..." aria-label="نص رسالة الترحيب"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
   <!-- Back to Top Button -->
   <button class="back-to-top" id="backToTopBtn" aria-label="العودة للأعلى" title="العودة للأعلى">
     <span class="back-to-top-icon">↑</span>
   </button>
+
 
 </body>
 

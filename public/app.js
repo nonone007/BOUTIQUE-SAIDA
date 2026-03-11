@@ -1,62 +1,87 @@
 // ============================================================================
-// FIREBASE INTEGRATION - SETUP INSTRUCTIONS
-// ============================================================================
-// 
-// STEP 1: Create Firebase Project
-//   1. Go to https://console.firebase.google.com and create a free account
-//   2. Create a new project
-//   3. Wait for the project to be ready
-//
-// STEP 2: Enable Firestore Database
-//   1. Go to Firestore Database in your Firebase console
-//   2. Click "Create database"
-//   3. Start in "test mode" (for development) or set up security rules
-//   4. Choose a location for your database
-//
-// STEP 3: Enable Firebase Storage
-//   1. Go to Storage in your Firebase console
-//   2. Click "Get started"
-//   3. Start in "test mode" (for development) or set up security rules
-//   4. Choose a location for your storage
-//
-// STEP 4: Configure This File
-//   1. Go to Project Settings (gear icon) → General tab
-//   2. Scroll down to "Your apps" section
-//   3. Click the web icon (</>) to add a web app
-//   4. Copy the firebaseConfig object → paste below
-//
+// CLOUDFLARE INTEGRATION - UNIFIED STACK
 // ============================================================================
 
-// Firebase imports (modular SDK v9+)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  getDocs,
-  getDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  serverTimestamp,
-  onSnapshot,
-  snapshotEqual,
-  increment
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+// Replace this with your actual Cloudflare Worker URL
+const API_URL = "https://boutique-saida-api.bilelahmed2000.workers.dev";
 
-// ⚠️ TODO: Replace these with your actual Firebase project credentials
-// Paste your Firebase config here from the Firebase console
-// If you haven't set up Firebase yet, leave these as placeholder values to use fallback mode
+// Check if Backend is available
+const BACKEND_ENABLED = true; // Set to false to use localStorage fallback
+console.log('✅ Cloudflare API target:', API_URL);
+
+// Placeholder for database compatibility
+const db = BACKEND_ENABLED ? { type: 'cloudflare' } : null;
+const storage = BACKEND_ENABLED ? { type: 'cloudflare' } : null;
+
+// === Authentication ===
+let ADMIN_TOKEN = localStorage.getItem('admin_token') || null;
+
+window.loginAdmin = async function () {
+  const pwdInput = document.getElementById('adminPassword');
+  const errorMsg = document.getElementById('adminLoginError');
+  if (!pwdInput) return;
+  const pwd = pwdInput.value;
+  try {
+    const res = await window.originalFetch(`${API_URL}/api/auth`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${pwd}`, 'Content-Type': 'application/json' }
+    });
+    if (res.status === 401 || !res.ok) {
+      if (errorMsg) {
+        errorMsg.textContent = "كلمة المرور غير صحيحة";
+        errorMsg.style.display = 'block';
+      }
+      return;
+    }
+
+    ADMIN_TOKEN = pwd;
+    localStorage.setItem('admin_token', ADMIN_TOKEN);
+    document.getElementById('adminLoginModal').style.display = 'none';
+    if (errorMsg) errorMsg.style.display = 'none';
+
+    // Refresh catalog after login
+    if (window.refreshCatalog) window.refreshCatalog();
+  } catch (e) {
+    if (errorMsg) errorMsg.style.display = 'block';
+  }
+};
+
+window.originalFetch = window.fetch;
+window.fetch = async function (resource, options) {
+  options = options || {};
+  const method = options.method?.toUpperCase() || 'GET';
+  const url = typeof resource === 'string' ? resource : (resource instanceof Request ? resource.url : '');
+
+  if (url.startsWith(API_URL) && method !== 'GET' && method !== 'HEAD') {
+    if (ADMIN_TOKEN) {
+      options.headers = options.headers || {};
+      options.headers['Authorization'] = `Bearer ${ADMIN_TOKEN}`;
+    } else if (typeof READ_ONLY_MODE !== 'undefined' && !READ_ONLY_MODE) {
+      const modal = document.getElementById('adminLoginModal');
+      if (modal) modal.style.display = 'flex';
+      throw new Error("Admin login required");
+    }
+  }
+
+  const response = await window.originalFetch(resource, options);
+
+  if (response.status === 401 && typeof READ_ONLY_MODE !== 'undefined' && !READ_ONLY_MODE) {
+    const modal = document.getElementById('adminLoginModal');
+    if (modal) modal.style.display = 'flex';
+    const err = document.getElementById('adminLoginError');
+    if (err) {
+      err.textContent = "انتهت الجلسة أو كلمة المرور خاطئة";
+      err.style.display = 'block';
+    }
+  }
+
+  return response;
+};
+
+// ============================================================================
+// END CLOUDFLARE INITIALIZATION
+// ============================================================================
+
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
   authDomain: "YOUR_AUTH_DOMAIN",
@@ -71,8 +96,8 @@ const FIREBASE_ENABLED = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOU
 
 // Initialize Firebase (only if configured)
 let app = null;
-let db = null;
-let storage = null;
+// Deduplicated: let db = null;
+// Deduplicated: let storage = null;
 
 if (FIREBASE_ENABLED) {
   try {
@@ -395,8 +420,8 @@ async function loadTickerPhrases() {
   const isHttp = location.protocol === 'http:' || location.protocol === 'https:';
   if (isHttp) {
     try {
-      const url = `phraseGen.json?ts=${Date.now()}`; // cache-bust
-      const response = await fetch(url, { cache: 'no-store' });
+      const url = `${API_URL}/https://boutique-saida-api.bilelahmed2000.workers.dev/phraseGen.json?ts=${Date.now()}`; // cache-bust
+      const response = await window.originalFetch(url, { cache: 'no-store' });
       if (response.ok) {
         const json = await response.json();
         const normalized = normalizeTickerPhrases(json);
@@ -5440,7 +5465,7 @@ function openQuickSettingsPanel(item) {
     if (timerBox) timerBox.style.display = isSale ? 'block' : 'none';
   }
 
-  function updateDiscount() {
+  function updateDiscount_dup_2() {
     // Convert comma to dot and normalize values
     const fromValue = fromEl?.value ? String(fromEl.value).replace(',', '.') : '';
     const newValue = newEl?.value ? String(newEl.value).replace(',', '.') : '';
@@ -6185,7 +6210,7 @@ function openQuickVideoPanel(video, index) {
   document.body.appendChild(panel);
 
   // Focus trap + close handlers
-  function closePanel() { try { backdrop.remove(); panel.remove(); } catch { } }
+  function closePanel_dup_2() { try { backdrop.remove(); panel.remove(); } catch { } }
   setTimeout(() => {
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanel(); }, { once: true });
     backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closePanel(); }, { once: true });
@@ -9728,7 +9753,7 @@ if (document.readyState === 'loading') {
     });
   }
 
-  function escapeHtml(text) {
+  function escapeHtml_dup_2(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -10065,7 +10090,7 @@ if (document.readyState === 'loading') {
     }
   });
 
-  // Helper function to get image source (handles IndexedDB paths)
+  // Helper function to_dup_2 get image source (handles IndexedDB paths)
   function getImageSource(img) {
     // Check for data-image-path attribute (IndexedDB images)
     const dataPath = img.getAttribute('data-image-path');
@@ -10520,7 +10545,7 @@ if (document.readyState === 'loading') {
   }
 
   // Run on load
-  function init() {
+  function init_dup_2() {
     adjustTitleSizes();
 
     // Watch for new cards being added

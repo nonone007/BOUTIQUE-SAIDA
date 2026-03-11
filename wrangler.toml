@@ -1,0 +1,29 @@
+name = "boutique-saida-api"
+main = "worker.js"
+compatibility_date = "2024-03-01"
+
+# Serve static files from the build directory
+assets = { directory = "./dist" }
+
+# [D1] Database Binding
+# You will need to create this in your Cloudflare Dashboard
+# wrangler d1 create boutique-db
+[[d1_databases]]
+binding = "DB"
+database_name = "boutique-db"
+database_id = "89a5276a-42fd-47d2-b99b-3c7d11f00e72"
+
+# [R2] Storage Binding
+# wrangler r2 bucket create boutique-images
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "boutique-images"
+
+[vars]
+# Domain where your Cloudflare Pages is hosted (for CORS)
+# ALLOWED_ORIGIN = "https://boutique-saida-api.bilelahmed2000.workers.dev"
+ALLOWED_ORIGIN = "*"
+
+# Public URL for your R2 bucket (set this after enabling public access in Cloudflare dashboard)
+# Example: "https://pub-xxxxxxxxxxxxxxxx.r2.dev"
+R2_PUBLIC_DOMAIN = "https://pub-aff64720deaa426bb7cdd4f8bfd21437.r2.dev"
